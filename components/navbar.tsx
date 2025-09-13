@@ -45,6 +45,19 @@ export function Navbar() {
             setUserRole(userData.role || "")
             setUserName(userData.name || userData.email || "User")
             console.log("[v0] User is logged in:", userData.role, userData.name)
+
+            if (userData.loginTime) {
+              const loginTime = new Date(userData.loginTime)
+              const now = new Date()
+              const hoursSinceLogin = (now.getTime() - loginTime.getTime()) / (1000 * 60 * 60)
+              console.log("[v0] Hours since login:", hoursSinceLogin)
+
+              if (hoursSinceLogin > 24) {
+                console.log("[v0] Session expired, logging out")
+                handleLogoutCleanup()
+                return
+              }
+            }
           } else {
             console.log("[v0] Invalid user data, logging out")
             handleLogoutCleanup()
@@ -60,6 +73,7 @@ export function Navbar() {
     }
 
     const handleLogoutCleanup = () => {
+      console.log("[v0] Cleaning up logout state")
       setIsLoggedIn(false)
       setUserRole("")
       setUserName("")
@@ -67,6 +81,8 @@ export function Navbar() {
     }
 
     checkAuthStatus()
+
+    const authCheckInterval = setInterval(checkAuthStatus, 30000)
 
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === "user") {
@@ -86,6 +102,7 @@ export function Navbar() {
     return () => {
       window.removeEventListener("storage", handleStorageChange)
       window.removeEventListener("authStateChanged", handleAuthChange)
+      clearInterval(authCheckInterval)
     }
   }, [isClient])
 
@@ -96,6 +113,7 @@ export function Navbar() {
     localStorage.removeItem("userRole")
     localStorage.removeItem("userName")
     localStorage.removeItem("authToken")
+    localStorage.removeItem("sessionId")
 
     setIsLoggedIn(false)
     setUserRole("")
@@ -106,9 +124,10 @@ export function Navbar() {
 
     window.dispatchEvent(new Event("authStateChanged"))
 
+    console.log("[v0] Redirecting to home page")
+    router.push("/")
+
     setTimeout(() => {
-      console.log("[v0] Redirecting to home page")
-      router.push("/")
       window.location.reload()
     }, 100)
 

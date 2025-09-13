@@ -27,31 +27,50 @@ export function LoginForm() {
     setError("")
 
     try {
+      console.log("[v0] Login attempt started with email:", formData.email)
+
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1000))
 
       // Mock authentication - in real app, this would be an API call
       if (formData.email && formData.password) {
-        // Store user data in localStorage (in real app, use proper auth tokens)
         const userData = {
           email: formData.email,
           role: formData.email.includes("doctor") ? "doctor" : "user",
           name: formData.email.split("@")[0],
+          loginTime: new Date().toISOString(),
+          sessionId: Math.random().toString(36).substr(2, 9),
         }
+
+        console.log("[v0] Storing user data:", userData)
         localStorage.setItem("user", JSON.stringify(userData))
 
-        window.dispatchEvent(new Event("authStateChanged"))
+        const storedData = localStorage.getItem("user")
+        console.log("[v0] Verification - stored data:", storedData)
 
-        // Redirect based on role
-        if (userData.role === "doctor") {
-          router.push("/doctor-dashboard")
-        } else {
-          router.push("/user-dashboard")
+        if (storedData) {
+          const parsedData = JSON.parse(storedData)
+          console.log("[v0] Verification - parsed data:", parsedData)
         }
+
+        window.dispatchEvent(new Event("authStateChanged"))
+        console.log("[v0] Auth state change event dispatched")
+
+        setTimeout(() => {
+          // Redirect based on role
+          if (userData.role === "doctor") {
+            console.log("[v0] Redirecting to doctor dashboard")
+            router.push("/doctor-dashboard")
+          } else {
+            console.log("[v0] Redirecting to user dashboard")
+            router.push("/user-dashboard")
+          }
+        }, 100)
       } else {
         setError("Please fill in all fields")
       }
     } catch (err) {
+      console.error("[v0] Login error:", err)
       setError("Login failed. Please try again.")
     } finally {
       setIsLoading(false)
